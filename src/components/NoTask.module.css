@@ -1,0 +1,32 @@
+.containerNoTask {
+    max-width: 45.5rem;
+    max-height: 15.25rem;
+    margin: 1.5rem auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: var(--gray-300);
+    border-top: 1px solid var(--gray-400);
+    border-radius: 8px;
+}
+
+.clipboard {
+    width: 3.5rem;
+    margin: 3rem 0 1rem 0;
+}
+
+.containerNoTask p {
+    text-align: center;
+    padding: 0 1rem;
+}
+
+.title {
+    font-weight: bold;
+}
+
+@media(max-width: 767px) {
+    .containerNoTask {
+        max-width: 44rem;
+    }    
+}

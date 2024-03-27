@@ -1,0 +1,45 @@
+.containerInfo {
+    max-width: 45.5rem;
+    max-height: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 4rem auto 1rem auto;
+    font-size: .875rem;
+}
+
+.createdTasks, .completedTasks {
+    display: flex;
+    gap: .5rem;
+    align-items: center;
+}
+
+.createdTasks p {
+    font-weight: bold;
+    color: var(--blue);
+}
+
+.completedTasks p {
+    font-weight: bold;
+    color: var(--purple);
+}
+
+.createdTasks span, .completedTasks span {
+    min-width: 1.5625rem;
+    height: 1.25rem;
+    padding: .5rem;
+    font-size: .75rem;
+    font-weight: bold;
+    color: var(--gray-200);
+    background: var(--gray-300);
+    border-radius: 62.4375rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+@media(max-width: 767px) {
+    .containerInfo {
+        padding: 0 1rem;
+    }
+}
