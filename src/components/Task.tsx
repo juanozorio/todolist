@@ -1,4 +1,5 @@
 import styles from './Task.module.css'
+import { ITask } from '../interfaces/Task'
 
 interface TaskProps {
     task: ITask

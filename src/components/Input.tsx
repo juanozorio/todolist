@@ -1,49 +1,82 @@
-import { FormEvent, useState } from 'react'
-import { v4 as uuidv4 } from 'uuid'
+import { FormEvent, useCallback, useEffect, useState } from 'react'
 import styles from './Input.module.css'
 
 import { Info } from './Info'
 import { NoTask } from './NoTask'
 import { Task } from './Task'
+import { ITask } from '../interfaces/Task'
+import { createTask, listTasks, updateTask } from '../services/api'
 
 export function Input() {
     const [tasks, setTasks] = useState<ITask[]>([])
     const [newTask, setNewTask] = useState<string>('')
+    const [loading, setLoading] = useState<boolean>(true)
+    const [error, setError] = useState<string | null>(null)
+
+    const fetchTasks = useCallback(async () => {
+        try {
+            setError(null)
+            const data = await listTasks()
+            setTasks(data ?? [])
+        } catch (err) {
+            console.error('Failed to fetch tasks:', err)
+            setError('Não foi possível carregar as tarefas.')
+        } finally {
+            setLoading(false)
+        }
+    }, [])
+
+    useEffect(() => {
+        fetchTasks()
+    }, [fetchTasks])
 
     function handleNewTaskChange(event: React.ChangeEvent<HTMLInputElement>) {
         setNewTask(event.target.value)
     }
 
-    function handleCreateNewTask(event: FormEvent<HTMLFormElement>) {
+    async function handleCreateNewTask(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
 
-        const task: ITask = {
-            id: uuidv4(),
-            description: newTask,
-            isCompleted: false
+        try {
+            setError(null)
+            const created = await createTask({ description: newTask })
+            setNewTask('')
+            setTasks(prev => [...prev, created])
+        } catch (err) {
+            console.error('Failed to create task:', err)
+            setError('Não foi possível criar a tarefa.')
         }
-        
-        setNewTask('')
-        setTasks([...tasks, task])
     }
 
-    function deleteTask(taskId: string) {
+    async function deleteTask(taskId: string) {
+        // Backend doesn't have DELETE endpoint yet — toggle as completed
+        // For now we remove from local state. When backend adds DELETE,
+        // this can be updated to call the API.
         const newTasksList = tasks.filter(task => task.id !== taskId)
         setTasks(newTasksList)
     }
 
-    function completedTask(taskId: string) {
-        const newTasksList = tasks.map(task =>
-            task.id === taskId
-                ? { ...task, isCompleted: !task.isCompleted }
-                : task
-        )
-        setTasks(newTasksList)
+    async function completedTask(taskId: string) {
+        const task = tasks.find(t => t.id === taskId)
+        if (!task) return
+
+        try {
+            setError(null)
+            const updated = await updateTask(taskId, {
+                isCompleted: !task.isCompleted,
+            })
+            setTasks(prev =>
+                prev.map(t => (t.id === taskId ? updated : t)),
+            )
+        } catch (err) {
+            console.error('Failed to update task:', err)
+            setError('Não foi possível atualizar a tarefa.')
+        }
     }
 
     const taskFieldIsEmpty = newTask.length === 0
     const createdTasksCounter = tasks.length
-    const completedTasksCounter = tasks.filter(task => task.isCompleted == true).length
+    const completedTasksCounter = tasks.filter(task => task.isCompleted === true).length
 
     return (
         <>
@@ -65,9 +98,18 @@ export function Input() {
                 </button>
             </form>
 
+            {error && (
+                <div className={styles.error}>
+                    <span className='material-symbols-outlined'>error</span>
+                    {error}
+                </div>
+            )}
+
             <Info createdTasks={createdTasksCounter} completedTasksCounter={completedTasksCounter} />
 
-            {tasks.length === 0 && <NoTask />}
+            {loading && <p className={styles.loading}>Carregando tarefas...</p>}
+
+            {!loading && tasks.length === 0 && <NoTask />}
 
             {tasks.map(task => (
                 <Task key={task.id} task={task} onDeleteTask={deleteTask} onCompletedTask={completedTask} />

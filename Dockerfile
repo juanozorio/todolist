@@ -1,20 +1,27 @@
+# ---- Build stage ----
 FROM node:18-alpine AS builder
 
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
 COPY . .
 
 RUN npm run build
 
-FROM nginx:1.25-alpine AS production
+# ---- Production stage ----
+FROM nginx:1.25-alpine
+
+RUN apk add --no-cache curl
 
 COPY --from=builder /app/dist /usr/share/nginx/html
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Default backend address (override via env var in K8s/Compose)
+ENV API_UPSTREAM=localhost:8080
 
 EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost/healthz || exit 1
