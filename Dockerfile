@@ -20,6 +20,8 @@ COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 
 # Default backend address (override via env var in K8s/Compose)
 ENV API_UPSTREAM=localhost:8080
+# Only substitute API_UPSTREAM in the template — leave nginx vars ($uri, $host, etc.) untouched
+ENV NGINX_ENVSUBST_FILTER=API_UPSTREAM
 
 EXPOSE 80
 
